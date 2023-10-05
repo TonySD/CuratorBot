@@ -1,7 +1,5 @@
 package com.example.curatorBot;
 
-import org.slf4j.LoggerFactory;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -9,8 +7,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class configParser {
-    public static Properties properties;
-    public static String propertiesFilePath = "src/main/resources/config.properties";
+    private static final Properties properties;
+    private static final String propertiesFilePath = "src/main/resources/config.properties";
 
     static {
         properties = new Properties();
@@ -35,10 +33,18 @@ public class configParser {
         FileOutputStream fileOutputStream;
         try {
             fileOutputStream = new FileOutputStream(propertiesFilePath);
-            // add properties here
+
+            properties.setProperty("api.login", "{your email}");
+            properties.setProperty("api.password", "{your password}");
+
             properties.store(fileOutputStream, null);
+            fileOutputStream.close();
         } catch (SecurityException | IOException exception) {
             System.err.println(exception.getMessage());
         }
+    }
+
+    public static String getProperty(String key) {
+        return properties.getProperty(key);
     }
 }
