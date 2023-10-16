@@ -1,6 +1,7 @@
 package com.example.curatorBot.api;
 
 import com.example.curatorBot.api.dto.HwPages;
+import com.example.curatorBot.api.dto.PassedHW;
 import com.example.curatorBot.configParser;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -52,10 +53,36 @@ public class ApiParser {
         }
     }
 
-    private static long getHWNumber() {
-        checkCookieForUpdate();
+    public static Optional<PassedHW> getSelectedHW(String url) {
+        Document doc;
+        try {
+            doc = Jsoup.connect(url)
+                    .cookies(cookies)
+                    .get();
+            String student_name = doc
+                    .select("#mainForm > div:nth-child(1) > div > div > div:nth-child(2) > div > div.row > div:nth-child(1) > input")
+                    .first()
+                    .attr("value");
+            String lesson_name = doc
+                    .select("#mainForm > div:nth-child(1) > div > div > div:nth-child(2) > div > div.row > div:nth-child(2) > div:nth-child(1) > small > b")
+                    .first().text();
+            String[] mark = doc
+                    .select("#mainForm > div:nth-child(1) > div > div > div:nth-child(2) > div > div.row > div:nth-child(6) > div:nth-child(1)")
+                    .first().text()
+                    .split(": ")[1]
+                    .split("/");
+            int student_mark = Integer.parseInt(mark[0]);
+            int max_mark = Integer.parseInt(mark[1]);
 
-        return 0;
+            return Optional.of(new PassedHW(
+                    student_name,
+                    lesson_name,
+                    student_mark,
+                    max_mark
+            ));
+        } catch (IOException ignored) {}
+
+        return Optional.empty();
     }
 
     private static Optional<HwPages> getHWInfo() {
