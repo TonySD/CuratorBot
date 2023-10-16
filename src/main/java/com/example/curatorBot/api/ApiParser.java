@@ -1,5 +1,6 @@
 package com.example.curatorBot.api;
 
+import com.example.curatorBot.api.dto.HwPages;
 import com.example.curatorBot.configParser;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -8,6 +9,7 @@ import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 public class ApiParser {
     private static int homeworks = 0;
@@ -17,8 +19,8 @@ public class ApiParser {
         updateCookie();
     }
 
-    public static void main(String[] args) throws IOException {
-        checkHWUpdate();
+    public static void main(String[] args) {
+
     }
     public static void parseHW() {
 
@@ -31,7 +33,6 @@ public class ApiParser {
                     .cookies(cookies)
                     .followRedirects(true)
                     .execute();
-
             if (res.url().toString().equals(configParser.getProperty("api.login_url"))) updateCookie(); // If redirects to login page - cookie invalidated
         } catch (IOException ignored) {}
     }
@@ -51,19 +52,30 @@ public class ApiParser {
         }
     }
 
-    private static void checkHWUpdate() {
+    private static long getHWNumber() {
+        checkCookieForUpdate();
+
+        return 0;
+    }
+
+    private static Optional<HwPages> getHWInfo() {
         checkCookieForUpdate();
         Document doc;
-        Element data = null;
         try {
             doc = Jsoup.connect(configParser.getProperty("api.homeworks_url"))
                     .cookies(cookies)
                     .get();
-            data = doc.select("#example2_info").first();
-        } catch (IOException exception) {
-            updateCookie();
+            Element data = doc.select("#example2_info").first();
+            String[] result = data.select("div").text().split(" ");
+            result[4] = result[4].substring(0, result[4].length() - 1);
+            return Optional.of(new HwPages(
+                    Integer.parseInt(result[6]),
+                    Integer.parseInt(result[4])
+            ));
+        } catch (IOException ignored) {
+            System.err.println("Something went wrong");
         }
+        return Optional.empty();
 
-        System.out.println(data.toString());
     }
 }
