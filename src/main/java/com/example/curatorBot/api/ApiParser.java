@@ -24,6 +24,19 @@ public class ApiParser {
 
     }
 
+    public static void checkCookieForUpdate() {
+        try {
+            Connection.Response res = Jsoup
+                    .connect(configParser.getProperty("api.index_url"))
+                    .cookies(cookies)
+                    .followRedirects(true)
+                    .execute();
+
+            if (res.url().toString().equals(configParser.getProperty("api.login_url"))) updateCookie(); // If redirects to login page - cookie invalidated
+        } catch (IOException ignored) {}
+    }
+
+
     private static void updateCookie() {
         Connection.Response res;
         try {
@@ -38,7 +51,8 @@ public class ApiParser {
         }
     }
 
-    private static boolean checkHWUpdate() {
+    private static void checkHWUpdate() {
+        checkCookieForUpdate();
         Document doc;
         Element data = null;
         try {
@@ -51,7 +65,5 @@ public class ApiParser {
         }
 
         System.out.println(data.toString());
-
-        return false;
     }
 }
