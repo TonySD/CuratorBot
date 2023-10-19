@@ -1,38 +1,31 @@
-package com.example.curatorBot.api;
+package com.example.curatorBot.api.ApiParser;
 
 import com.example.curatorBot.api.dto.HomeworkPages;
 import com.example.curatorBot.api.dto.ParsedHomework;
 import com.example.curatorBot.configParser;
 import lombok.extern.log4j.Log4j;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 
 @Log4j
 public class ApiParser {
-    private static int homeworks;
+    private int homeworks;
+    private final ApiCookieValidator apiCookieValidator;
 
-
-    static {
+    public ApiParser() {
+        apiCookieValidator = new ApiCookieValidator();
         getHWInfo();
     }
 
-    public static void main(String[] args) {
-        System.out.println(getHWInfo().orElseThrow());
-    }
-
-
-
-    public static Optional<ParsedHomework> getSelectedHW(String url) {
+    public Optional<ParsedHomework> getSelectedHW(String url) {
         Document doc;
         try {
             doc = Jsoup.connect(url)
-                    .cookies(CookieValidator.getCookies())
+                    .cookies(apiCookieValidator.getCookies())
                     .get();
             String student_name = doc
                     .select("#mainForm > div:nth-child(1) > div > div > div:nth-child(2) > div > div.row > div:nth-child(1) > input")
@@ -63,11 +56,11 @@ public class ApiParser {
         return Optional.empty();
     }
 
-    private static Optional<HomeworkPages> getHWInfo() {
+    private Optional<HomeworkPages> getHWInfo() {
         Document doc;
         try {
             doc = Jsoup.connect(configParser.getProperty("api.homeworks_url"))
-                    .cookies(CookieValidator.getCookies())
+                    .cookies(apiCookieValidator.getCookies())
                     .get();
             Element data = doc.select("#example2_info").first();
             String[] result = data.select("div").text().split(" ");
@@ -77,14 +70,14 @@ public class ApiParser {
                     homeworks,
                     Integer.parseInt(result[4])
             ));
-        } catch (IOException exception) {
+        } catch (IOException | NullPointerException exception) {
             log.error(exception.getMessage());
         }
         return Optional.empty();
 
     }
 
-    private static boolean checkNewHWs() {
+    private boolean checkNewHWs() {
         Optional<HomeworkPages> result = getHWInfo();
         if (result.isEmpty()) return false;
         return result.get().amount_of_HWS() == homeworks;

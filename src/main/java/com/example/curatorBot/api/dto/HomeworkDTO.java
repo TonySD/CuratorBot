@@ -1,6 +1,6 @@
 package com.example.curatorBot.api.dto;
 
-import com.example.curatorBot.api.ApiParser;
+import com.example.curatorBot.api.ApiParser.ApiParser;
 import com.example.curatorBot.configParser;
 
 public class HomeworkDTO {
@@ -19,10 +19,5 @@ public class HomeworkDTO {
 
     public String getUrl() {
         return url;
-    }
-
-    public ParsedHomework getHw_info() {
-        if (hw_info == null) hw_info = ApiParser.getSelectedHW(url).orElseThrow();
-        return hw_info;
     }
 }
