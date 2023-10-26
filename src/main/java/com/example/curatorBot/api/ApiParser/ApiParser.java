@@ -3,7 +3,7 @@ package com.example.curatorBot.api.ApiParser;
 import com.example.curatorBot.api.dto.HomeworkPages;
 import com.example.curatorBot.api.dto.ParsedHomework;
 import com.example.curatorBot.configParser;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,7 +11,7 @@ import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.util.Optional;
 
-@Log4j
+@Log4j2
 public class ApiParser {
     private int homeworks;
     private final ApiCookieValidator apiCookieValidator;
