@@ -3,13 +3,14 @@ package com.example.curatorBot.api.SiteParser;
 import com.example.curatorBot.api.CookieValidator;
 import com.example.curatorBot.api.dto.ParsedHomework;
 import com.example.curatorBot.configParser;
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.openqa.selenium.Cookie;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.io.IOException;
 import java.net.URL;
@@ -23,13 +24,14 @@ public class SiteCookieValidator extends CookieValidator {
     @Override
     protected void checkCookieForUpdate() {
         try {
-            WebClient webClient = new WebClient(BrowserVersion.CHROME);
-            webClient.setJavaScriptTimeout(15000);
-            webClient.getOptions().setThrowExceptionOnScriptError(false);
-            HtmlPage myPage = webClient.getPage(configParser.getProperty("site.valid_cookies"));
-            log.trace("Created webclient and got page");
-            Document doc = Jsoup.parse(myPage.getPage().toString());
-            System.out.println(doc.body());
+            WebDriver driver = new ChromeDriver();
+            driver.get(configParser.getProperty("site.valid_cookies"));
+            for (String cookie : cookies.keySet()) {
+                driver.manage().addCookie(new Cookie(cookie, cookies.get(cookie)));
+            }
+
+            JavascriptExecutor executor = (JavascriptExecutor) driver;
+            String html = executor.executeScript("return document.getElementsByTagName('html')[0].innerHTML").toString();
         } catch (Exception ignored) {
 
         }
