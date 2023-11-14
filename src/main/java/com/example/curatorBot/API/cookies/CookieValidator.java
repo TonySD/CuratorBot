@@ -1,10 +1,5 @@
-package com.example.curatorBot.api;
+package com.example.curatorBot.API.cookies;
 
-import com.example.curatorBot.configParser;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-
-import java.io.IOException;
 import java.util.Map;
 
 public abstract class CookieValidator {

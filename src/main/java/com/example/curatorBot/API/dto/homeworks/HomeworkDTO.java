@@ -1,6 +1,5 @@
-package com.example.curatorBot.api.dto;
+package com.example.curatorBot.API.dto.homeworks;
 
-import com.example.curatorBot.api.ApiParser.ApiParser;
 import com.example.curatorBot.configParser;
 
 public class HomeworkDTO {

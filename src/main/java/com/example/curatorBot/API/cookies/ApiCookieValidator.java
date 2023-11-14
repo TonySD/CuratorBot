@@ -1,14 +1,11 @@
-package com.example.curatorBot.api.ApiParser;
+package com.example.curatorBot.API.cookies;
 
-import com.example.curatorBot.api.CookieValidator;
 import com.example.curatorBot.configParser;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Log4j2
 public class ApiCookieValidator extends CookieValidator {

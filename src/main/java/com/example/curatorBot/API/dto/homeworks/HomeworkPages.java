@@ -1,4 +1,4 @@
-package com.example.curatorBot.api.dto;
+package com.example.curatorBot.API.dto.homeworks;
 
 public record HomeworkPages(int amount_of_HWS, int HWs_on_page) {
     @Override

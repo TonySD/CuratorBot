@@ -1,7 +1,8 @@
-package com.example.curatorBot.api.ApiParser;
+package com.example.curatorBot.API.parsers;
 
-import com.example.curatorBot.api.dto.HomeworkPages;
-import com.example.curatorBot.api.dto.ParsedHomework;
+import com.example.curatorBot.API.cookies.ApiCookieValidator;
+import com.example.curatorBot.API.dto.homeworks.HomeworkPages;
+import com.example.curatorBot.API.dto.homeworks.ParsedHomework;
 import com.example.curatorBot.configParser;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Jsoup;
@@ -63,6 +64,7 @@ public class ApiParser {
                     .cookies(apiCookieValidator.getCookies())
                     .get();
             Element data = doc.select("#example2_info").first();
+            assert data != null;
             String[] result = data.select("div").text().split(" ");
             result[4] = result[4].substring(0, result[4].length() - 1);
             homeworks = Integer.parseInt(result[6]);
