@@ -1,55 +1,50 @@
 package com.example.curatorBot.api.SiteParser;
 
 import com.example.curatorBot.api.CookieValidator;
-import com.example.curatorBot.api.dto.ParsedHomework;
 import com.example.curatorBot.configParser;
 import lombok.extern.log4j.Log4j2;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.openqa.selenium.Cookie;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.io.IOException;
-import java.net.URL;
+import java.util.Set;
 
 @Log4j2
 public class SiteCookieValidator extends CookieValidator {
-    public SiteCookieValidator() {
+    public WebDriver driver;
+    // Need for future serialization
+    private Set<Cookie> driver_cookies;
+
+    public SiteCookieValidator(WebDriver driver) {
+        this.driver = driver;
         updateCookie();
     }
 
     @Override
     protected void checkCookieForUpdate() {
         try {
-            WebDriver driver = new ChromeDriver();
             driver.get(configParser.getProperty("site.valid_cookies"));
-            for (String cookie : cookies.keySet()) {
-                driver.manage().addCookie(new Cookie(cookie, cookies.get(cookie)));
+            if (driver.getCurrentUrl().equals(configParser.getProperty("site.index_url"))) {
+                updateCookie();
             }
-
-            JavascriptExecutor executor = (JavascriptExecutor) driver;
-            String html = executor.executeScript("return document.getElementsByTagName('html')[0].innerHTML").toString();
-        } catch (Exception ignored) {
-
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
         }
     }
 
     @Override
     protected void updateCookie() {
-        Connection.Response res;
-        try {
-            res = Jsoup
-                    .connect(configParser.getProperty("site.login_url"))
-                    .data("email", configParser.getProperty("site.email"), "password", configParser.getProperty("site.password"))
-                    .method(Connection.Method.POST)
-                    .execute();
-            cookies = res.cookies();
-            log.info("Cookies was updated");
-        } catch (IOException exception) {
-            log.warn(exception.getMessage());
-        }
+        driver.get(configParser.getProperty("site.index_url"));
+        WebElement pop_login_page = driver.findElement(By.cssSelector("#root > main > header > section > button"));
+        pop_login_page.click();
+        WebElement email = driver.findElement(By.cssSelector("#email"));
+        WebElement password = driver.findElement(By.id("password"));
+        WebElement submit = driver.findElement(By.xpath("//*[@id=\"popup-1\"]/div/section/form/div[3]/button[1]"));
+        email.sendKeys(configParser.getProperty("site.email"));
+        password.sendKeys(configParser.getProperty("site.password"));
+        submit.click();
+        driver_cookies = driver.manage().getCookies();
     }
 }
