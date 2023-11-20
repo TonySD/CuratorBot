@@ -1,6 +1,6 @@
 package com.example.curatorBot.API.parsers;
 
-import com.example.curatorBot.API.cookies.ApiCookieValidator;
+import com.example.curatorBot.API.validators.ApiAuthValidator;
 import com.example.curatorBot.API.dto.homeworks.HomeworkPages;
 import com.example.curatorBot.API.dto.homeworks.ParsedHomework;
 import com.example.curatorBot.configParser;
@@ -15,10 +15,10 @@ import java.util.Optional;
 @Log4j2
 public class ApiParser {
     private int homeworks;
-    private final ApiCookieValidator apiCookieValidator;
+    private final ApiAuthValidator apiAuthValidator;
 
     public ApiParser() {
-        apiCookieValidator = new ApiCookieValidator();
+        apiAuthValidator = new ApiAuthValidator();
         getHWInfo();
     }
 
@@ -26,7 +26,7 @@ public class ApiParser {
         Document doc;
         try {
             doc = Jsoup.connect(url)
-                    .cookies(apiCookieValidator.getCookies())
+                    .cookies(apiAuthValidator.getAuth())
                     .get();
             String student_name = doc
                     .select("#mainForm > div:nth-child(1) > div > div > div:nth-child(2) > div > div.row > div:nth-child(1) > input")
@@ -61,7 +61,7 @@ public class ApiParser {
         Document doc;
         try {
             doc = Jsoup.connect(configParser.getProperty("api.homeworks_url"))
-                    .cookies(apiCookieValidator.getCookies())
+                    .cookies(apiAuthValidator.getAuth())
                     .get();
             Element data = doc.select("#example2_info").first();
             assert data != null;
