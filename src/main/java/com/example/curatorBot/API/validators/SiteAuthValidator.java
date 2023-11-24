@@ -26,10 +26,11 @@ public class SiteAuthValidator extends Validator {
                     .execute();
             if (response.statusCode() != 200) {
                 updateAuth();
-                log.trace("Auth was expired, updated successfully");
+                log.debug("Auth was expired, updated successfully");
             }
+            else log.trace("Authorization is valid");
         } catch (Exception exception) {
-            log.error("Error checking authorization \n{}", exception.getMessage());
+            log.error("Error checking authorization \n{}", exception.toString());
         }
     }
 

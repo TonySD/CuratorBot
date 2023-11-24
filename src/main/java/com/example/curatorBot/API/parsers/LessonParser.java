@@ -1,5 +1,6 @@
 package com.example.curatorBot.API.parsers;
 
+import com.example.curatorBot.API.dto.lessons.LessonLevel;
 import com.example.curatorBot.API.validators.SiteAuthValidator;
 import com.example.curatorBot.API.dto.lessons.LessonDTO;
 import com.example.curatorBot.API.dto.lessons.LevelMarks;
@@ -19,15 +20,25 @@ import java.util.*;
 
 @Log4j2
 public class LessonParser {
-    private SiteAuthValidator siteAuthValidator;
+    private final SiteAuthValidator siteAuthValidator;
 
     public LessonParser() {
         siteAuthValidator = new SiteAuthValidator();
     }
 
+    private LessonLevel getHWLevel(String name) {
+        return switch (name) {
+            case "simple" -> LessonLevel.EASY;
+            case "medium" -> LessonLevel.MEDIUM;
+            case "hard" -> LessonLevel.HARD;
+            case "sampler" -> LessonLevel.SAMPLER;
+            default -> throw new NoSuchElementException(String.format("Level not found %s", name));
+        };
+    }
+
     private int getHomeworkMaxPoint(int id) {
         String url = String.format(configParser.getProperty("site.homework_info"), id);
-        Document doc = null;
+        Document doc;
         int max_points = 0;
         try {
             doc = Jsoup
@@ -54,9 +65,8 @@ public class LessonParser {
 
     private LessonDTO getLessonInfo(int id) {
         Document doc = null;
+        String url = String.format(configParser.getProperty("site.lesson_info"), id);
         try {
-            String url = String.format(configParser.getProperty("site.lesson_info"), id);
-            System.out.println(url);
             doc = Jsoup
                     .connect(url)
                     .headers(siteAuthValidator.getAuth())
@@ -72,49 +82,24 @@ public class LessonParser {
             throw new NoSuchElementException("Lesson was not found...");
         }
         JSONObject jsonObject = new JSONObject(doc.body().text());
-        System.out.println(jsonObject);
-        String name = jsonObject.getString("title");
 
+        String name = jsonObject.getString("title");
+        List<LevelMarks> levelMarks = new ArrayList<>();
         JSONArray difficulties = jsonObject.getJSONObject("homeworks").getJSONArray("difficulties");
 
-        System.out.println(name);
-        return null;
-    }
+        for (Object o : difficulties) {
+            JSONObject current = (JSONObject) o;
+            levelMarks.add(new LevelMarks(
+                    getHWLevel(current.getString("difficulty")),
+                    getHomeworkMaxPoint(current.getInt("id"))
+            ));
+        }
 
-    private List<WebElement> getHomeworkLevels() {
-        return null;
-//        List<WebElement> levels = driver.findElements(By.xpath("//*[@id=\"root\"]/div[1]/div/div/div[2]/div[2]/div[3]/child::*"));
-//        if (levels.isEmpty()) levels = driver.findElements(By.xpath("//*[@id=\"root\"]/div[1]/div/div/div[2]/div[3]/div[3]/child::*"));
-//        if (levels.isEmpty()) levels =  driver.findElements(By.xpath("//*[@id=\"root\"]/div[1]/div/div/div[2]/div[3]/div[3]/div/child::*"));
-//        return levels;
-    }
-
-    /* JavascriptExecutor js = (JavascriptExecutor) driver;
-        js.executeScript("window.scrollBy(0,document.body.scrollHeight)");*/
-    public LessonDTO getLessonByUrl(String url) throws InterruptedException {
-//        driver.get(url);
-//        Sleeper.sleepRandTime(5000);
-//
-//        int id = Integer.parseInt(url.split("lesson/")[1]);
-//        String html = driver.getPageSource();
-//        Document parsedHTML = Jsoup.parse(html);
-//        Element nameOfLesson = parsedHTML.selectXpath("//*[@id=\"root\"]/div[1]/div/div/div[1]/div/h1").first();
-//
-//        List<WebElement> levels = getHomeworkLevels();
-//        List<LevelMarks> levelInfo = new ArrayList<>();
-//        int currentLevel, amountLevels = levels.size();
-//
-//        for (currentLevel = 0; currentLevel < amountLevels; ++currentLevel) {
-//            levelInfo.add(
-//                    getLessonLevelInfo(levels.get(currentLevel), currentLevel)
-//            );
-//            levels = getHomeworkLevels();
-//        }
-//
-//        assert nameOfLesson != null;
-//        String name = nameOfLesson.text();
-//
-//        return new LessonDTO(id, url, name, levelInfo);
-        return null;
+        return new LessonDTO(
+                id,
+                url,
+                name,
+                levelMarks
+        );
     }
 }
