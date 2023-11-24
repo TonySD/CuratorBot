@@ -7,10 +7,9 @@ import com.example.curatorBot.API.dto.lessons.LevelMarks;
 import lombok.extern.log4j.Log4j2;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.openqa.selenium.*;
 import com.example.curatorBot.configParser;
 import org.openqa.selenium.NoSuchElementException;
 
@@ -24,6 +23,66 @@ public class LessonParser {
 
     public LessonParser() {
         siteAuthValidator = new SiteAuthValidator();
+    }
+
+    private JSONArray getLessonPage(int page_id) {
+        String pagination = String.format("{\"page\":%d}", page_id);
+        Document response;
+        JSONArray lessons = null;
+        try {
+            response = Jsoup
+                    .connect(configParser.getProperty("site.api_lessons"))
+                    .userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
+                    .referrer(configParser.getProperty("site.index_url"))
+                    .headers(siteAuthValidator.getAuth())
+                    .header("Accept", "application/json")
+                    .header("Content-Type", "application/json")
+                    .requestBody(pagination)
+                    .ignoreContentType(true)
+                    .method(Connection.Method.POST)
+                    .execute()
+                    .parse();
+            lessons = new JSONObject(response.body().text()).getJSONArray("lessons");
+            log.trace("Successfully got page number {}", page_id);
+        } catch (IOException e) {
+            log.error("Failed to parse level page with id: {}\n{}", page_id, e);
+        }
+        return lessons;
+    }
+    private LessonDTO getLessonByName(String name) {
+        Document response;
+        JSONArray current;
+        JSONObject lesson;
+        int last_page = 0;
+        try {
+            response = Jsoup
+                    .connect(configParser.getProperty("site.api_lessons"))
+                    .userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0 Safari/535.21")
+                    .referrer(configParser.getProperty("site.index_url"))
+                    .headers(siteAuthValidator.getAuth())
+                    .header("Accept", "application/json")
+                    .header("Content-Type", "application/json")
+                    .ignoreContentType(true)
+                    .method(Connection.Method.POST)
+                    .execute()
+                    .parse();
+            last_page = new JSONObject(response.body().text()).getJSONObject("pagination").getInt("last_page");
+        } catch (IOException e) {
+            log.error("Failed to get pagination in levels\n{}", e.toString());
+        }
+        for (int i = 1; i <= last_page; ++i) {
+            current = getLessonPage(i);
+            for (Object o : current) {
+                lesson = (JSONObject) o;
+                if (lesson.getString("title").equals(name)) {
+                    log.debug("Lesson was found \"{}\"", name);
+                    return getLessonInfo(lesson.getInt("id"));
+                }
+            }
+        }
+        throw new NoSuchElementException(
+                String.format("Can't find lesson \"%s\"", name)
+        );
     }
 
     private LessonLevel getHWLevel(String name) {
