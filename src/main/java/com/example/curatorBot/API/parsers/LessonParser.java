@@ -75,10 +75,11 @@ public class LessonParser {
             for (Object o : current) {
                 lesson = (JSONObject) o;
                 if (lesson.getString("title").equals(name)) {
-                    log.debug("Lesson was found \"{}\"", name);
+                    log.debug("Lesson \"{}\" was found", name);
                     return getLessonInfo(lesson.getInt("id"));
                 }
             }
+            log.trace("Lesson \"{}\" wasn't found on page {}", name, i);
         }
         throw new NoSuchElementException(
                 String.format("Can't find lesson \"%s\"", name)
